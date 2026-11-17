@@ -1,0 +1,187 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WILWATIKTA 3D — Open World Crime di Kota Matahari</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0f18;color:#e2e8f0;font-family:Arial,Helvetica,sans-serif}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+#vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(200,0,0,.55) 100%);opacity:0;z-index:5}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10;display:none}
+.panel{background:rgba(8,12,20,.72);border:1px solid rgba(255,213,74,.35);border-radius:8px;padding:8px 12px}
+.bar{height:8px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:#ffd54a}
+#missionBox{position:fixed;top:14px;left:14px;width:336px}
+#mTitle{font-weight:900;font-size:16px;letter-spacing:.5px;color:#ffd54a}
+#mObj{font-size:13px;line-height:1.35;margin-top:2px}
+#mTimer{font-size:12px;color:#a0aec0;margin-top:3px;font-weight:700}
+#mNext{font-size:11px;color:#718096;margin-top:3px}
+#topRight{position:fixed;top:14px;right:14px;text-align:right;min-width:190px}
+#cash{font-weight:900;font-size:24px;color:#68d391}
+#stars{font-size:18px;letter-spacing:3px;color:#4a5568}
+#stars .on{color:#ffd54a;text-shadow:0 0 8px #ffd54a}
+#clock{font-size:12px;color:#a0aec0;font-weight:700}
+#objWrap{position:fixed;top:14px;left:calc(50% - 24px);width:48px;text-align:center}
+#objArrow{font-size:26px;color:#ffd54a;text-shadow:0 0 10px #000}
+#objDist{display:block;font-size:11px;font-weight:900;color:#fff;margin-top:-4px}
+#watermark{position:fixed;top:104px;left:0;right:0;text-align:center;font-weight:900;font-size:58px;letter-spacing:14px;color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.8);opacity:.28}
+#banner{position:fixed;top:190px;left:0;right:0;text-align:center;display:none}
+#bannerText{font-weight:900;font-size:34px;letter-spacing:4px;color:#ffd54a;text-shadow:0 2px 14px #000}
+#bannerSub{font-size:15px;color:#fff;text-shadow:0 1px 8px #000}
+#mapWrap{position:fixed;left:14px;bottom:14px;width:190px;text-align:center}
+#minimap{border-radius:50%;border:3px solid rgba(255,213,74,.6);box-shadow:0 0 16px rgba(0,0,0,.6);display:block}
+#districtLabel{font-weight:900;font-size:14px;color:#ffd54a;margin-top:5px}
+#streetLabel{font-size:11px;color:#cbd5e0}
+.bar.hp i{background:#f56565}.bar.ar i{background:#4299e1}.bar.rp i{background:#9f7aea}
+#repLabel{font-size:10px;color:#a0aec0;margin-top:2px}
+#speedo{position:fixed;right:14px;bottom:14px;width:196px;text-align:right}
+#speedNum{font-weight:900;font-size:54px;line-height:1;color:#fff}
+#speedUnit{font-size:11px;letter-spacing:3px;color:#a0aec0}
+#gearRow{margin-top:4px;font-size:13px}
+#gear{display:inline-block;background:#ffd54a;color:#111;font-weight:900;border-radius:4px;padding:1px 8px;margin-right:6px}
+#carName{font-weight:900;color:#ffd54a}
+.condLbl{font-size:9px;letter-spacing:2px;color:#718096;text-align:left;margin-top:2px}
+#dialogue{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:440px;display:none;gap:10px;align-items:center;background:rgba(8,12,20,.78);border:1px solid rgba(255,213,74,.4);border-radius:8px;padding:8px 12px}
+#dlgPortrait{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:24px;flex:none;border:2px solid #ffd54a}
+#dlgWho{font-weight:900;font-size:13px;color:#ffd54a}
+#dlgRole{font-size:9px;letter-spacing:2px;color:#a0aec0}
+#dlgLine{font-size:13px;line-height:1.3;font-style:italic}
+#dispatchLine{position:fixed;bottom:104px;left:0;right:0;text-align:center;font-size:12px;font-weight:700;text-shadow:0 1px 6px #000}
+#radioWidget{position:fixed;right:14px;top:118px;width:204px}
+#radioStation{font-weight:900;font-size:13px;color:#f6ad55}
+#radioTrack{font-size:11px;color:#cbd5e0}
+#eqBars{display:flex;gap:3px;align-items:flex-end;height:18px;margin-top:4px}
+#eqBars i{width:8px;background:#f6ad55;display:block}
+#weaponBar{position:fixed;right:14px;bottom:182px;display:flex;gap:6px}
+.wslot{position:relative;width:58px;height:58px;background:rgba(8,12,20,.72);border:2px solid rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#cbd5e0}
+.wslot.active{border-color:#ffd54a;color:#ffd54a;box-shadow:0 0 12px rgba(255,213,74,.5)}
+.wslot.locked{opacity:.55}
+.wslot svg{width:34px;height:34px}
+.wkey{position:absolute;top:1px;left:4px;font-size:10px;font-weight:900;color:#a0aec0}
+.wammo{position:absolute;bottom:1px;right:4px;font-size:10px;font-weight:900}
+.wlock{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#f56565;background:rgba(0,0,0,.45);border-radius:6px}
+#weaponName{position:fixed;right:14px;bottom:160px;font-weight:900;font-size:13px;letter-spacing:1px;color:#fff;text-shadow:0 1px 6px #000}
+#crewCards{position:fixed;left:14px;bottom:304px;display:flex;flex-direction:column;gap:6px;width:216px}
+.crew{position:relative;display:flex;gap:8px;align-items:center;background:rgba(8,12,20,.72);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px 8px;opacity:.75}
+.crew.ready{border-color:#48bb78;opacity:1}
+.cport{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex:none;border:2px solid rgba(255,255,255,.4)}
+.cinfo b{display:block;font-size:12px}
+.cinfo span{display:block;font-size:10px;color:#a0aec0}
+.ccost{color:#68d391!important}
+.ccd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.78);border-radius:8px;font-weight:900;font-size:16px;color:#ffd54a}
+#wpdPanel{position:fixed;right:14px;top:202px;width:236px}
+.wpdHead{font-weight:900;font-size:12px;letter-spacing:2px;color:#63b3ed;margin-bottom:4px}
+.unit{display:flex;gap:6px;align-items:center;font-size:11px;padding:2px 0}
+.unit b{flex:1}
+.unit em{font-style:normal;font-weight:900;font-size:9px;padding:1px 5px;border-radius:3px}
+em.red{background:#c53030;color:#fff}em.amber{background:#b7791f;color:#fff}em.blue{background:#2b6cb0;color:#fff}em.green{background:#276749;color:#fff}
+#wpdHint{font-size:10px;color:#a0aec0;margin-top:4px;line-height:1.3}
+#bustWarn{position:fixed;top:64px;left:0;right:0;text-align:center;font-weight:900;font-size:18px;color:#fc8181;text-shadow:0 1px 8px #000;display:none}
+.overlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;flex-direction:column}
+#title{background:linear-gradient(rgba(5,8,16,.25) 0%,rgba(5,8,16,.15) 45%,rgba(5,8,16,.78) 100%)}
+.logo{font-weight:900;font-size:76px;letter-spacing:16px;color:#ffd54a;text-shadow:0 4px 0 #7a5a00,0 8px 30px #000;text-align:center}
+.tagline{font-size:17px;letter-spacing:5px;color:#fff;text-shadow:0 2px 10px #000;margin:2px 0 22px;text-align:center}
+.menu{display:flex;flex-direction:column;gap:9px;width:300px}
+button{pointer-events:auto;cursor:pointer;font-family:inherit;font-weight:900;letter-spacing:1px;font-size:15px;padding:11px 16px;border-radius:8px;border:1px solid rgba(255,213,74,.5);background:rgba(8,12,20,.85);color:#ffd54a}
+button:hover{background:#ffd54a;color:#111}
+button:disabled{opacity:.4;cursor:default}
+button:hover:disabled{background:rgba(8,12,20,.85);color:#ffd54a}
+#titleSaveInfo{margin-top:12px;font-size:12px;color:#cbd5e0;text-shadow:0 1px 6px #000}
+.titleFoot{margin-top:18px;font-size:11px;color:#a0aec0;text-align:center;line-height:1.6;text-shadow:0 1px 6px #000}
+.sheet{background:rgba(8,12,20,.94);border:1px solid rgba(255,213,74,.45);border-radius:12px;padding:22px 26px;width:560px;max-height:88vh;overflow:auto}
+.sheet h2{font-weight:900;letter-spacing:3px;color:#ffd54a;font-size:24px;margin-bottom:10px}
+.sheet h3{font-size:13px;letter-spacing:2px;color:#f6ad55;margin:12px 0 4px}
+.sheet p,.sheet li{font-size:13px;line-height:1.5;color:#e2e8f0}
+.sheet table{width:100%;border-collapse:collapse;font-size:13px}
+.sheet td{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sheet td:first-child{font-weight:900;color:#ffd54a;width:130px}
+.sheet .row{display:flex;gap:8px;margin-top:14px}
+#mapScreen{background:rgba(5,8,16,.92);justify-content:flex-start;padding:10px 12px;align-items:stretch}
+.mapHead{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.mapHead h2{font-weight:900;letter-spacing:3px;color:#ffd54a;font-size:22px;flex:1}
+.mapBody{display:flex;gap:12px;flex:1;min-height:0}
+#mapCanvas{border:2px solid rgba(255,213,74,.5);border-radius:10px;flex:none}
+.side{width:296px;flex:none;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.sideBox{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px}
+.sideBox h3{font-size:11px;letter-spacing:2px;color:#f6ad55;margin-bottom:5px}
+#mapStats div{display:flex;justify-content:space-between;font-size:12px;padding:1px 0}
+#mapStats b{color:#ffd54a}
+.mrow{display:flex;gap:7px;align-items:center;font-size:11px;padding:1px 4px;border-radius:4px}
+.mrow b{color:#718096;width:16px}
+.mrow span{flex:1}
+.mrow em{font-style:normal;font-weight:900;font-size:10px}
+.mrow em.done{color:#68d391}.mrow em.active{color:#ffd54a}
+.mrow.active{background:rgba(255,213,74,.12)}
+#legend{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+#legend div{font-size:11px;display:flex;align-items:center;gap:6px;padding:1px 0}
+#legend i{width:12px;height:12px;display:inline-block;border-radius:2px;flex:none}
+.gaugeBox{display:flex;gap:10px;align-items:center}
+.gaugeBox p{font-size:11px;color:#a0aec0;line-height:1.4}
+.grow{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.grow div:first-child{flex:1}
+.grow b{display:block;font-size:14px}
+.grow span{font-size:11px;color:#a0aec0}
+.pips{color:#ffd54a;letter-spacing:2px}
+.slot{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.slot b{width:70px}
+.slot span{flex:1;font-size:12px;color:#a0aec0}
+.big{font-weight:900;font-size:64px;letter-spacing:10px;text-align:center}
+#busted{background:rgba(60,5,10,.82)}#wasted{background:rgba(10,10,20,.85)}
+#busted .big{color:#fc8181}#wasted .big{color:#a0aec0}
+#passed{background:rgba(20,25,5,.55)}
+#passed .big{color:#ffd54a;font-size:52px}
+#complete{background:rgba(5,8,16,.88)}
+#complete .big{color:#ffd54a;font-size:44px;letter-spacing:6px}
+.centerStats{font-size:15px;color:#fff;margin:10px 0 18px;text-align:center}
+</style></head><body>
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+<div id="hud">
+<div id="missionBox" class="panel"><div id="mTitle"></div><div id="mObj"></div><div id="mTimer"></div><div class="bar"><i id="mStage"></i></div><div id="mNext"></div></div>
+<div id="topRight" class="panel"><div id="cash"></div><div id="stars"></div><div id="clock"></div></div>
+<div id="objWrap"><div id="objArrow">▲</div><div id="objDist"></div></div>
+<div id="watermark"></div>
+<div id="banner"><div id="bannerText"></div><div id="bannerSub"></div></div>
+<div id="mapWrap"><canvas id="minimap" width="190" height="190"></canvas><div id="districtLabel"></div><div id="streetLabel"></div><div class="bar hp"><i id="healthBar"></i></div><div class="bar ar"><i id="armourBar"></i></div><div class="bar rp"><i id="repBar"></i></div><div id="repLabel"></div></div>
+<div id="speedo" class="panel"><div id="speedNum">0</div><div id="speedUnit">KM/H</div><div id="gearRow"><span id="gear">N</span><span id="carName">GARUDA GT</span></div><div class="bar cd"><i id="condBar"></i></div><div class="condLbl">CONDITION</div></div>
+<div id="dialogue"><div id="dlgPortrait">S</div><div><div id="dlgWho"></div><div id="dlgRole"></div><div id="dlgLine"></div></div></div>
+<div id="dispatchLine"></div>
+<div id="radioWidget" class="panel"><div id="radioStation"></div><div id="radioTrack"></div><div id="eqBars"></div></div>
+<div id="weaponBar"></div><div id="weaponName"></div>
+<div id="crewCards"></div>
+<div id="wpdPanel" class="panel"><div class="wpdHead">WPD RESPONSE</div><div id="wpdUnits"></div><div id="wpdHint"></div></div>
+<div id="bustWarn">⚠ WPD CLOSING IN — DRIVE! ⚠</div>
+</div>
+<div id="title" class="overlay"><div class="logo">WILWATIKTA</div><div class="tagline">OPEN WORLD CRIME DI KOTA MATAHARI</div>
+<div class="menu"><button id="btnNewGame">▶ NEW GAME</button><button id="btnContinue">CONTINUE</button><button id="btnHowto">HOW TO PLAY</button><button id="btnTitleSaves">SAVE SLOTS</button></div>
+<div id="titleSaveInfo"></div>
+<div class="titleFoot">WASD drive / walk · E enter-exit car · SPACE shoot · F punch · R reload · Q / 1-4 weapons · Z X C crew · T radio · G garage · TAB map · P pause<br>12 missions · 6 districts · An original game — all art, names and music made in code. No Rockstar content.</div></div>
+<div id="howto" class="overlay"><div class="sheet"><h2>HOW TO PLAY</h2>
+<p>You are <b>Sugeng Wibowo</b>, getaway driver of Wilwatikta. Run 12 story missions for Agus the fixer, stay ahead of Komisaris Wanto and the WPD, and build your name from street nobody to legend of the sunset city.</p>
+<h3>CONTROLS</h3><table>
+<tr><td>W A S D</td><td>Drive / walk (Shift = handbrake / run)</td></tr>
+<tr><td>E</td><td>Enter / exit car (steal parked cars)</td></tr>
+<tr><td>SPACE</td><td>Shoot (drive-by while driving)</td></tr>
+<tr><td>F / R</td><td>Punch / reload</td></tr>
+<tr><td>Q / 1-4</td><td>Switch weapon</td></tr>
+<tr><td>Z X C</td><td>Crew: Agus intel · Bambang repair · Ratna heat</td></tr>
+<tr><td>T / M / H</td><td>Radio station / mute / horn</td></tr>
+<tr><td>G / TAB / P</td><td>Garage / map / pause</td></tr></table>
+<h3>SURVIVAL</h3><p>Stars = wanted level. Break line of sight to cool down. At 3 stars the WPD helicopter joins with a spotlight; at 3+ stars expect roadblocks. Busted or wasted costs you cash and restarts the mission. Spend cash at Bengkel Bambang (G) — engine, armor, tires, paint.</p>
+<div class="row"><button id="btnHowtoBack">← BACK</button></div></div></div>
+<div id="pause" class="overlay"><div class="sheet"><h2>PAUSED</h2><p>Wilwatikta waits. The sun does not.</p>
+<div class="row"><button id="btnResume">RESUME</button><button id="btnPauseMap">MAP</button><button id="btnPauseGarage">GARAGE</button></div>
+<div class="row"><button id="btnPauseSaves">SAVE SLOTS</button><button id="btnQuitTitle">QUIT TO TITLE</button></div></div></div>
+<div id="garage" class="overlay"><div class="sheet"><h2>BENGKEL BAMBANG</h2><p>Cash: <b id="garageCash" style="color:#68d391"></b> · Car condition:</p><div class="bar"><i id="garageCond" style="background:#48bb78"></i></div>
+<div id="garageRows"></div><div class="row"><button id="btnGarageClose">CLOSE [G]</button></div></div></div>
+<div id="mapScreen" class="overlay"><div class="mapHead"><h2>WILWATIKTA — CITY MAP</h2><button id="btnMapClose">CLOSE [TAB]</button></div>
+<div class="mapBody"><canvas id="mapCanvas" width="940" height="640"></canvas>
+<div class="side"><div class="sideBox gaugeBox"><canvas id="mapGauge" width="90" height="90"></canvas><p>Story progress across all 12 missions. Finish the chain to become a legend of Wilwatikta.</p></div>
+<div class="sideBox"><h3>STATUS</h3><div id="mapStats"></div></div>
+<div class="sideBox"><h3>MISSIONS</h3><div id="missionList"></div></div>
+<div class="sideBox"><h3>LEGEND</h3><div id="legend"></div></div></div></div></div>
+<div id="saves" class="overlay"><div class="sheet"><h2>SAVE SLOTS</h2><div id="saveSlots"></div><div class="row"><button id="btnSavesBack">← BACK</button></div></div></div>
+<div id="busted" class="overlay"><div class="big">BUSTED</div><div class="centerStats" id="bustedStats"></div><button id="btnBustedRespawn">RESPAWN AT GARAGE [ENTER]</button></div>
+<div id="wasted" class="overlay"><div class="big">WASTED</div><div class="centerStats" id="wastedStats"></div><button id="btnWastedRespawn">RESPAWN AT GARAGE [ENTER]</button></div>
+<div id="passed" class="overlay"><div class="big">MISSION PASSED</div><div class="centerStats"><span id="passedName"></span><br><span id="passedReward" style="color:#ffd54a;font-weight:900"></span><br>Next mission starting…</div></div>
+<div id="complete" class="overlay"><div class="big">STORY COMPLETE</div><div class="centerStats">Sugeng Wibowo — legend of Wilwatikta.<br><span id="completeStats"></span></div><button id="btnFreeRoam">CONTINUE FREE ROAM</button></div>
+<script type="module" src="./src/main.js"></script>
+</body></html>
